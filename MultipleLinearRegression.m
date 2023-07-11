@@ -1,6 +1,9 @@
 %% Função Geral 
+% Interface com usuário obtém os parametros de entrada para calcular a
+% regressão multipla
 function RegressionCoefficients = MultipleLinearRegression(Sample)
 ENCODED_VARIABLES = 1;
+NATURAL_VARIABLES = 2;
 var = ENCODED_VARIABLES;
 
 %% Nível de Significância
@@ -37,7 +40,6 @@ switch answer
         previousSample = Sample;
         [Sample, XTable] = NormalAdjustment(Sample);
 end
-% fileID = fopen('D:\ArquivosMatlab\Estatística\table.csv', 'w');
 writetable(XTable,'D:\ArquivosMatlab\Estatística\Sample.txt'); % x is the name of your table, the csv will be saved where your code is saved
 disp(XTable);
 
@@ -105,7 +107,7 @@ switch answer
         printResidueGraphs(previousSample,var,ResiduesTable, answer);
     case 'Não'
 end
-% printResidueGraphs(Sample,var,ResiduesTable);
+
 printCoeficientsResult(Sample,RegressionTable, alpha,n,k);
 
 RegressionCoefficients = RegressionTable.Beta;
@@ -115,6 +117,7 @@ toc
 end
 
 %% Calculo de n
+% Obter o número de observações
 function n = getObservations(Sample)
  X = Sample;
  X(:,1) = 1;
@@ -123,6 +126,7 @@ function n = getObservations(Sample)
 end
 
 %% Calculo de k [DoF da Regressao]
+% Obtem o numero de graus de liberdade da amostra
 function k = getRegressionDoF(Sample)
  X = Sample;
  X(:,1) = 1;
@@ -131,11 +135,13 @@ function k = getRegressionDoF(Sample)
 end
 
 %% Calculo de DoF Residuos
+% Obtem o numero de graus de liberdade dos resíduos
 function DoFResidue = getDoFResidue(n,k)
  DoFResidue = n - k - 1;
 end
 
 %% Calcula a ANOVA 
+% Obtem uma tabela com a análise de variância
 function FTable = getFTable(Sample,n,k)
  X = Sample;
  X(:,1) = 1; 
@@ -166,6 +172,8 @@ function FTable = getFTable(Sample,n,k)
 end
 
 %% Verifica se o modelo é significativo por meio da ANOVA
+% Interpreta os resultados a partir da Tabela F que foi calculada pela
+% função getFTable
 function ANOVAResult = getANOVAResult(FTable,alpha)
  FTable.Properties.VariableNames = {'DoF', 'SumOfSquares', 'MeanSquare','F', 'pValor'};
  p_value = FTable.pValor(1);
@@ -179,6 +187,7 @@ function ANOVAResult = getANOVAResult(FTable,alpha)
 end
 
 %% Calculo a Tabela dos Coeficientes de Regressao
+% Obtem uma tabela com os parâmetros da regressão
 function RegressionTable = getRegresionTable(Sample,XTable,n,k)
  X = Sample;
  X(:,1) = 1;
@@ -221,6 +230,7 @@ RegressionTable = table(beta,erropadrao,tb,pValue, 'VariableNames',VarNames,'Row
 end
 
 %% Coeficient Analyses
+% Interpreta os resultados da regressão da Tabela dos Coeficientes 
 function printCoeficientsResult(Sample,RegressionTable,alpha,n,k)
 X = Sample;
 
@@ -247,8 +257,8 @@ for i=1:length(RegressionTable.Beta)
     end
 end
  
- XRowNames = XRowNames(~cellfun('isempty',XRowNames)); % identify the empty cells
- disp(validBetas);
+ XRowNames = XRowNames(~cellfun('isempty',XRowNames)); % identify and remove empty cells
+%  disp(validBetas);
  
   if isempty(XRowNames) %verifica se existem variavies x
     fprintf("\n Dessa forma, verifica-se que nenhuma das variáveis representa o modelo.\n");
@@ -283,6 +293,7 @@ end
 end
 
 %% Obtem a Tabela dos Residuos
+% Calcula a Tabela dos Residuos a partir da Tabela de Regressão
 function ResiduesTable = getResiduesTable(Sample,RegressionTable)
  X = Sample;
  X(:,1) = 1;      % obtem os valores da variavel X
@@ -402,7 +413,7 @@ function R2Adj = fR2Adj(FTable)
  R2Adj = 1 - (SSres/DoF_Residue)/(SStotal/DoF_Total);
 end
 
-%% print variables 
+%% Imprime os resultados da regressão
 function RegressionResults(Sample,FTable,R2,R2Adj, n,k)
  FTable.Properties.VariableNames = {'DoF', 'SumOfSquares', 'MeanSquare','F', 'pValor'};
  y = Sample(:,1);
